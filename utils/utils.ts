@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 
-export function getProjectRoot() {
+export function getProjectRoot(): string {
    let currentDir = process.cwd(); // Starts at your package's directory
    while (currentDir !== path.parse(currentDir).root) {
       if (fs.existsSync(path.join(currentDir, 'package.json'))) {
@@ -10,9 +10,11 @@ export function getProjectRoot() {
       currentDir = path.dirname(currentDir); // Move up
    }
    throw new Error('This is not a npm project');
-};
+}
 
-export function convertCase(str, format = 'camel') {
+export type CaseFormat = 'camel' | 'pascal' | 'snake' | 'kebab';
+
+export function convertCase(str: string, format: CaseFormat = 'camel'): string {
    if (!str) return '';
 
    const words = str
@@ -23,7 +25,7 @@ export function convertCase(str, format = 'camel') {
 
    if (words.length === 0) return '';
 
-   let processedWords;
+   let processedWords: string[];
    let separator = '';
 
    switch (format) {
@@ -52,4 +54,30 @@ export function convertCase(str, format = 'camel') {
    }
 
    return processedWords.join(separator);
+}
+
+export type GeneratedFile = [filePath: string, content: string];
+
+export interface WriteOptions {
+   force?: boolean;
+   dryRun?: boolean;
+}
+
+export function writeFiles(files: GeneratedFile[], { force = false, dryRun = false }: WriteOptions = {}): boolean {
+   const conflicts = files.filter(([filePath]) => fs.existsSync(filePath)).map(([filePath]) => filePath);
+   if (conflicts.length > 0 && !force) {
+      conflicts.forEach((filePath) => console.error(`File already exists: ${filePath}`));
+      console.error('Refusing to overwrite existing files. Use --force to overwrite them.');
+      process.exitCode = 1;
+      return false;
+   }
+   if (dryRun) {
+      files.forEach(([filePath]) => console.log(`[dry-run] Would write ${filePath}`));
+      return true;
+   }
+   files.forEach(([filePath, content]) => {
+      fs.writeFileSync(filePath, content);
+      console.log(`Created ${filePath}`);
+   });
+   return true;
 }

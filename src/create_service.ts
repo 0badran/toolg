@@ -1,10 +1,10 @@
-import fs from 'fs';
-import { fileType, targetPath } from '../main.js';
-import { convertCase } from '../utils/utils.js';
+import { fileType, targetPath, genOpts } from './context.js';
+import { convertCase, writeFiles } from '../utils/utils.js';
 
 
-export function createService(name) {
-   fs.writeFileSync(`${targetPath}/services/${name}.${fileType}`, `export async function ${name}(data) {
+export function createService(name: string): void {
+   writeFiles([
+      [`${targetPath}/services/${name}.${fileType}`, `export async function ${name}(data) {
    try {
       const response = await fetch('<API_URL>', {
          method: 'POST',
@@ -20,11 +20,13 @@ export function createService(name) {
       console.error('Error creating item:', error);
       throw error;
    }
-}`);
+}`],
+   ], genOpts);
 };
 
-export function getService(name) {
-   fs.writeFileSync(`${targetPath}/services/${name}.${fileType}`, `export async function ${name}(id) {
+export function getService(name: string): void {
+   writeFiles([
+      [`${targetPath}/services/${name}.${fileType}`, `export async function ${name}(id) {
    try {
       const response = await fetch('<API_URL>/'+id);
       if (!response.ok) throw new Error('Item not found');
@@ -33,11 +35,13 @@ export function getService(name) {
       console.error('Error fetching item: '+id, error);
       throw error;
    }
-}`);
+}`],
+   ], genOpts);
 };
 
-export function updateService(name) {
-   fs.writeFileSync(`${targetPath}/services/${name}.${fileType}`, `export async function ${name}(id, data) {
+export function updateService(name: string): void {
+   writeFiles([
+      [`${targetPath}/services/${name}.${fileType}`, `export async function ${name}(id, data) {
    try {
       const response = await fetch('<API_URL>/'+id, {
          method: 'PUT',
@@ -52,11 +56,13 @@ export function updateService(name) {
       console.error('Error updating item: '+id, error);
       throw error;
    }
-}`);
+}`],
+   ], genOpts);
 };
 
-export function deleteService(name) {
-   fs.writeFileSync(`${targetPath}/services/${name}.${fileType}`, `export async function ${name}(id) {
+export function deleteService(name: string): void {
+   writeFiles([
+      [`${targetPath}/services/${name}.${fileType}`, `export async function ${name}(id) {
    try {
       const response = await fetch('<API_URL>/'+id, {
          method: 'DELETE',
@@ -67,12 +73,14 @@ export function deleteService(name) {
       console.error('Error deleting item: '+id, error);
       throw error;
    }
-}`);
+}`],
+   ], genOpts);
 };
 
-export function createCRUD(name) {
+export function createCRUD(name: string): void {
    name = convertCase(name, 'pascal');
-   fs.writeFileSync(`${targetPath}/services/crud${name}.${fileType}`, `export async function create${name}(data) {
+   writeFiles([
+      [`${targetPath}/services/crud${name}.${fileType}`, `export async function create${name}(data) {
       try {
          const response = await fetch('<API_URL>', {
             method: 'POST',
@@ -140,5 +148,6 @@ export function createCRUD(name) {
          console.error('Error deleting item: '+id, error);
          throw error;
       }
-   }`);
+   }`],
+   ], genOpts);
 };
